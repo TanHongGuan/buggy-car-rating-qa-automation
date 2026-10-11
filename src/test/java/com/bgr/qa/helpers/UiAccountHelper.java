@@ -1,4 +1,4 @@
-package com.bgr.qa;
+package com.bgr.qa.helpers;
 
 import java.util.UUID;
 import org.openqa.selenium.By;
@@ -7,8 +7,8 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 /** Small public-UI account helper; keeps credentials in memory without logging them. */
-final class UiAccountHelper {
-    record Credentials(String username, String password) {
+public final class UiAccountHelper {
+    public record Credentials(String username, String password) {
         @Override
         public String toString() {
             return "Credentials[redacted]";
@@ -18,12 +18,12 @@ final class UiAccountHelper {
     private UiAccountHelper() {
     }
 
-    static void registerAndLogin(WebDriver driver, WebDriverWait wait) {
+    public static void registerAndLogin(WebDriver driver, WebDriverWait wait) {
         login(driver, wait, register(driver, wait));
     }
 
     /** Registers one account and returns its credentials without logging in. */
-    static Credentials register(WebDriver driver, WebDriverWait wait) {
+    public static Credentials register(WebDriver driver, WebDriverWait wait) {
         String username = "tc03_" + UUID.randomUUID().toString().replace("-", "");
         String password = UUID.randomUUID() + "aA!7";
 
@@ -44,7 +44,7 @@ final class UiAccountHelper {
     }
 
     /** Logs in on the current page without navigating or refreshing it. */
-    static void login(WebDriver driver, WebDriverWait wait, Credentials credentials) {
+    public static void login(WebDriver driver, WebDriverWait wait, Credentials credentials) {
         // Scope to nav: the registration form also has a password input.
         driver.findElement(By.cssSelector("nav input[name='login']"))
             .sendKeys(credentials.username());
