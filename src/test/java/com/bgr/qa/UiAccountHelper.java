@@ -1,0 +1,40 @@
+package com.bgr.qa;
+
+import java.util.UUID;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+/** Small public-UI account helper; never logs or stores generated credentials. */
+final class UiAccountHelper {
+    private UiAccountHelper() {
+    }
+
+    static void registerAndLogin(WebDriver driver, WebDriverWait wait) {
+        String username = "tc03_" + UUID.randomUUID().toString().replace("-", "");
+        String password = UUID.randomUUID() + "aA!7";
+
+        driver.get("https://buggy.justtestit.org/register");
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("username")))
+            .sendKeys(username);
+        driver.findElement(By.id("firstName")).sendKeys("QA");
+        driver.findElement(By.id("lastName")).sendKeys("Automation");
+        driver.findElement(By.id("password")).sendKeys(password);
+        driver.findElement(By.id("confirmPassword")).sendKeys(password);
+        // One submission only: a timeout must not create another account.
+        wait.until(ExpectedConditions.elementToBeClickable(
+            By.xpath("//button[normalize-space()='Register']"))).click();
+        wait.withMessage("Account preparation: registration success was not shown")
+            .until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//*[normalize-space()='Registration is successful']")));
+
+        // Scope to nav: the registration form also has a password input.
+        driver.findElement(By.cssSelector("nav input[name='login']")).sendKeys(username);
+        driver.findElement(By.cssSelector("nav input[name='password']")).sendKeys(password);
+        wait.until(ExpectedConditions.elementToBeClickable(
+            By.xpath("//nav//button[normalize-space()='Login']"))).click();
+        wait.withMessage("Account preparation: login did not reach the authenticated UI")
+            .until(ExpectedConditions.visibilityOfElementLocated(By.linkText("Logout")));
+    }
+}
