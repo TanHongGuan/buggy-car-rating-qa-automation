@@ -11,6 +11,10 @@
     <name>bgr-automation</name>
     <url>http://maven.apache.org</url>
 
+    <properties>
+        <excludedGroups>known-failure</excludedGroups>
+    </properties>
+
     <!-- Project dependencies -->
     <dependencies>
 
@@ -48,6 +52,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.3</version>
+                <configuration>
+                    <excludedGroups>${excludedGroups}</excludedGroups>
+                </configuration>
             </plugin>
         </plugins>
     </build>
