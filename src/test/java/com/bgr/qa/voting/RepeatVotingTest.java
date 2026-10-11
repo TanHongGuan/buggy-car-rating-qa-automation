@@ -14,7 +14,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 /**
- * VOTE-TC05 and VOTE-TC06: prevent repeat voting before and after refresh.
+ * VOTE-TC05–TC07: prevent repeat voting without refresh, after refresh and after revisit.
  * Each method prepares a fresh eligible account and submits only one vote.
  * Precondition: a fresh eligible account. Expected: success feedback and no Vote! button.
  * Checks the observed UI restriction, not server-side duplicate-vote enforcement.
@@ -92,6 +92,46 @@ public class RepeatVotingTest {
             "Refresh must keep the browser on the selected car page");
         Assert.assertTrue(driver.findElements(VOTE_BUTTON).isEmpty(),
             "Vote! must remain absent after refresh to prevent another vote");
+    }
+
+    @Test(description = "VOTE-TC07: repeat voting remains restricted after revisiting the car page")
+    public void repeatVoteIsPreventedAfterRevisit() {
+        driver.get(CAR_URL);
+        wait.withMessage("Car page did not restore the authenticated session")
+            .until(ExpectedConditions.visibilityOfElementLocated(By.linkText("Logout")));
+        WebElement voteButton = wait.withMessage("First Vote! control was not available")
+            .until(ExpectedConditions.elementToBeClickable(VOTE_BUTTON));
+        Assert.assertTrue(voteButton.isDisplayed() && voteButton.isEnabled(),
+            "Vote! must be available before the first vote");
+        Assert.assertTrue(driver.findElements(SUCCESS).isEmpty(),
+            "A fresh account must not already show an accepted vote");
+
+        // One submission only; never retry or attempt a second vote.
+        voteButton.click();
+        WebElement feedback = wait.withMessage("The first vote did not show success feedback")
+            .until(ExpectedConditions.visibilityOfElementLocated(SUCCESS));
+        Assert.assertEquals(feedback.getText().trim(), "Thank you for your vote!");
+
+        // Leave through the application's home link, verified against the public UI.
+        wait.until(ExpectedConditions.elementToBeClickable(By.linkText("Buggy Rating"))).click();
+        wait.withMessage("The home link did not navigate away from the car page")
+            .until(ExpectedConditions.urlToBe("https://buggy.justtestit.org/"));
+        wait.until(ExpectedConditions.stalenessOf(feedback));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.linkText("Logout")));
+
+        // Revisit the same model without logging out; this is not a page refresh.
+        driver.get(CAR_URL);
+        wait.withMessage("Authentication was not restored after revisiting")
+            .until(ExpectedConditions.visibilityOfElementLocated(By.linkText("Logout")));
+        // Do not let an empty loading page satisfy the absence assertion.
+        wait.withMessage("Voting state did not load after revisiting")
+            .until(ExpectedConditions.or(
+                ExpectedConditions.visibilityOfElementLocated(SUCCESS),
+                ExpectedConditions.visibilityOfElementLocated(VOTE_BUTTON)));
+        Assert.assertEquals(driver.getCurrentUrl(), CAR_URL,
+            "The browser must return to the same car model URL");
+        Assert.assertTrue(driver.findElements(VOTE_BUTTON).isEmpty(),
+            "Vote! must remain absent after revisiting to prevent another vote");
     }
 
     @AfterMethod(alwaysRun = true)
