@@ -13,7 +13,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-/** VOTE-TC08: logout restores guest voting restrictions without a manual refresh or vote. */
+/** VOTE-TC08–TC09: guest voting restrictions after logout, before and after refresh. */
 public class VotingSessionTest {
     private WebDriver driver;
     private WebDriverWait wait;
@@ -57,6 +57,45 @@ public class VotingSessionTest {
             "Vote! must be absent after logout without a refresh");
         Assert.assertTrue(driver.findElements(By.id("comment")).isEmpty(),
             "Comment input must be absent in the guest-restricted state");
+    }
+
+    /**
+     * TC09 covers UI prevention after logout and refresh. An absent Vote! button
+     * prevents the manual submission attempt; this does not prove server-side rejection.
+     */
+    @Test(description = "VOTE-TC09: unauthenticated voting is prevented after logout and refresh")
+    public void logoutAndRefreshRestrictsVoting() {
+        driver.get(CAR_URL);
+        wait.withMessage("Car page did not restore the authenticated session")
+            .until(ExpectedConditions.visibilityOfElementLocated(By.linkText("Logout")));
+        wait.withMessage("Authenticated car voting content did not load")
+            .until(ExpectedConditions.elementToBeClickable(VOTE_BUTTON));
+
+        // No authenticated vote: establish the logged-out precondition through the UI.
+        wait.until(ExpectedConditions.elementToBeClickable(By.linkText("Logout"))).click();
+        wait.withMessage("Logout did not restore the navigation login form")
+            .until(ExpectedConditions.visibilityOfElementLocated(
+                By.cssSelector("nav input[name='login']")));
+        wait.until(ExpectedConditions.numberOfElementsToBe(By.linkText("Logout"), 0));
+        Assert.assertEquals(driver.getCurrentUrl(), CAR_URL,
+            "The target car page must be open before the refresh");
+
+        driver.navigate().refresh();
+        wait.withMessage("Refreshed page did not show the guest login form")
+            .until(ExpectedConditions.visibilityOfElementLocated(
+                By.cssSelector("nav input[name='login']")));
+        // Wait for car-specific guest content so a loading page cannot pass by absence.
+        WebElement restriction = wait.withMessage("Refreshed car page did not show guest restriction")
+            .until(ExpectedConditions.visibilityOfElementLocated(GUEST_RESTRICTION));
+        Assert.assertEquals(restriction.getText().trim(), "You need to be logged in to vote.");
+        Assert.assertEquals(driver.getCurrentUrl(), CAR_URL,
+            "Refresh must keep the browser on the target car page");
+        Assert.assertTrue(driver.findElements(By.linkText("Logout")).isEmpty(),
+            "The session must remain logged out after refresh");
+        wait.withMessage("Vote! remained available to a guest after refresh")
+            .until(ExpectedConditions.numberOfElementsToBe(VOTE_BUTTON, 0));
+        Assert.assertTrue(driver.findElements(VOTE_BUTTON).isEmpty(),
+            "Vote! must be absent: unauthenticated submission is unavailable through the UI");
     }
 
     @AfterMethod(alwaysRun = true)
