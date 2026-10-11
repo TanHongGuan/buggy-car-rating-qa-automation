@@ -15,6 +15,7 @@ import org.testng.annotations.Test;
 
 /**
  * VOTE-TC03 and VOTE-TC04: first-vote eligibility and login without refresh.
+ * VOTE-TC15: confirmation feedback after an eligible vote.
  * Each method prepares its own account in a fresh browser; no execution order is required.
  * Verifies public UI evidence only.
  */
@@ -92,6 +93,26 @@ public class VotingEligibilityTest {
             "Vote! must become visible and enabled without a manual refresh");
         Assert.assertEquals(driver.getCurrentUrl(), guestCarUrl,
             "The browser must remain on the same car URL when voting becomes available");
+    }
+
+    @Test(description = "VOTE-TC15: an eligible vote displays the exact success confirmation")
+    public void eligibleVoteDisplaysSuccessFeedback() {
+        UiAccountHelper.registerAndLogin(driver, wait);
+        driver.get(CAR_URL);
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.linkText("Logout")));
+        WebElement voteButton = wait.withMessage("Eligible Vote! control was not available")
+            .until(ExpectedConditions.elementToBeClickable(VOTE_BUTTON));
+        Assert.assertTrue(driver.findElements(SUCCESS).isEmpty(),
+            "Success feedback must not already be present before submission");
+
+        // Exactly one submission; never retry an uncertain vote.
+        voteButton.click();
+        WebElement feedback = wait.withMessage("Vote submission did not show success feedback")
+            .until(ExpectedConditions.visibilityOfElementLocated(SUCCESS));
+        String confirmation = feedback.getText().trim();
+        System.out.println("VOTE-TC15 observed confirmation: " + confirmation);
+        Assert.assertEquals(confirmation, "Thank you for your vote!",
+            "The eligible vote must display the expected success confirmation");
     }
 
     @AfterMethod(alwaysRun = true)
