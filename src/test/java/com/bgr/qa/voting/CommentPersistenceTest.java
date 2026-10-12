@@ -102,6 +102,34 @@ public class CommentPersistenceTest {
         }
     }
 
+    @Test(description = "VOTE-TC11: special-symbol comment is rendered as text without markup")
+    public void specialSymbolCommentIsHandledAsText() {
+        driver.get(CAR_URL);
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.linkText("Logout")));
+        String marker = "QA-TC11-" + UUID.randomUUID();
+        String comment = "!@#$%^&*()<>? " + marker;
+        // Match by marker so transformed symbols remain observable rather than timing out.
+        By commentCell = By.xpath(COMMENT_TABLE + "/tbody/tr/td[3][contains(., '" + marker + "')]");
+        WebElement input = wait.until(ExpectedConditions.visibilityOfElementLocated(COMMENT));
+        Assert.assertTrue(driver.findElements(commentCell).isEmpty(), "Marker must be new");
+        input.sendKeys(comment);
+        System.out.println("VOTE-TC11 submitted: " + comment);
+
+        // The public control also casts a vote; submit exactly once, never retry.
+        wait.until(ExpectedConditions.elementToBeClickable(VOTE_BUTTON)).click();
+        WebElement published = wait.withMessage("Special-symbol comment was not displayed")
+            .until(ExpectedConditions.visibilityOfElementLocated(commentCell));
+        String displayed = published.getText();
+        System.out.println("VOTE-TC11 displayed: " + displayed);
+        System.out.println("VOTE-TC11 rendered HTML: " + published.getDomProperty("innerHTML"));
+        Assert.assertEquals(displayed, comment,
+            "The approved symbols must be displayed as text; HTML escaping is allowed");
+        Assert.assertTrue(published.findElements(By.xpath("./*")).isEmpty(),
+            "The submitted comment must not create child markup");
+        Assert.assertNull(ExpectedConditions.alertIsPresent().apply(driver),
+            "No script dialog should appear while rendering the approved symbol comment");
+    }
+
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
         if (driver != null) {
