@@ -1,77 +1,108 @@
 # Buggy Cars Rating QA Automation
 
-Public-UI portfolio tests using Java 17 language compatibility, Selenium, TestNG,
-Maven and Chrome. Install a JDK (17 or later), Maven and Chrome. Selenium Manager
-resolves ChromeDriver; initial setup may require network access.
+## Project Overview
 
-## Coverage
+An independent black-box QA portfolio project for the [Buggy Cars Rating public demo](https://buggy.justtestit.org/). It brings together manual test design and execution, defect documentation, Selenium automation, and regression reporting.
 
-| Class | Coverage |
-| --- | --- |
-| `WebsiteSmokeTest` | Homepage has a non-empty title |
-| `GuestVotingTest` | VOTE-TC01: guests have no Vote button; VOTE-TC02: guests have no comment input |
-| `EligibleVotingTest` | VOTE-TC03: newly registered user logs in, clicks Vote! once, sees success feedback and the Vote button disappear |
+Current scope is **F04 — Voting & Comments**: guest restrictions, eligible and repeat voting, login/logout transitions, vote counts, comment rendering, persistence and feedback. All verification uses the public UI; there is no access to application source code or backend data.
+
+## Technology Stack
+
+| Component | Repository configuration |
+|---|---|
+| Java | Compiler `release 17` language compatibility |
+| Selenium WebDriver | 4.35.0 |
+| TestNG | 7.11.0 |
+| Maven plugins | Compiler 3.14.0; Surefire 3.5.3 |
+| Browser | Google Chrome / ChromeDriver; Selenium Manager resolves the driver |
+
+Versions are defined in [pom.xml](pom.xml). Java 17 compatibility does not establish that the tests were executed on a Java 17 runtime; historical runtime details are recorded below.
+
+## Testing Workflow
+
+1. **Requirements and risk analysis:** identify observable behaviors and risks, recorded with scenario IDs, priorities and test techniques.
+2. **Manual test design and execution:** document preconditions, data, steps, expected results and historical outcomes.
+3. **Defect documentation:** record observed discrepancies and distinguish provisional issues from confirmed observations.
+4. **Automation implementation:** map approved cases to independent TestNG methods using fresh accounts where needed, explicit waits and always-run browser cleanup.
+5. **Regression and reporting:** execute normal regression and the known failure separately; reconcile results and coverage limitations with the specification.
+
+## F04 — Voting & Comments
+
+Latest recorded verification: **2026-10-12**, UTC+08:00. These are recorded results, not a guarantee of the public demo's current behavior.
+
+| Measure | Result |
+|---|---|
+| Documented manual cases | 16 |
+| Automated cases implemented | 14 — **87.5% implementation coverage** |
+| Passing automated F04 cases | 13 |
+| Automated known failure | TC13 — comment persists, Author cell empty |
+| Manual-first cases | TC10 (long-comment layout), TC14 (metadata) |
+| Normal regression | **BUILD SUCCESS** — 14 passed, 0 failures/errors/skips; includes one smoke test |
+| Separate TC13 execution | **BUILD FAILURE** — 1 test, 1 failure, 0 errors/skips |
+
+Implementation coverage is **14/16 cases**, including TC13. It is not the pass rate or a claim that every manual action is fully automated. The smoke test is additional to F04 and checks that the homepage title is nonempty.
+
+Tests are grouped by related scenarios in [the voting package](src/test/java/com/bgr/qa/voting/):
+
+| Class | Cases |
+|---|---|
+| `GuestVotingTest` | TC01–TC02 |
+| `VotingEligibilityTest` | TC03–TC04, TC15 |
+| `RepeatVotingTest` | TC05–TC07 |
+| `VotingSessionTest` | TC08–TC09 |
+| `VotingCountTest` | TC12 |
+| `CommentPersistenceTest` | TC11, TC13, TC16 |
+
+## Running the Tests
+
+Install a **JDK 17 or later**, **Maven** and **Google Chrome**, with Java and Maven available on your command path. Run commands from the repository root. Network access is needed for the demo and, initially, Maven dependencies and Selenium Manager's ChromeDriver resolution.
+
+No account credentials or environment variables are required. The [account helper](src/test/java/com/bgr/qa/helpers/UiAccountHelper.java) registers unique users through the UI and keeps generated credentials in memory. Registration/login failures are setup failures, not proof of a voting defect. Reassess preparation if the demo introduces verification steps; do not bypass them.
+
+Compile without executing tests:
 
 ```sh
 mvn test-compile
-mvn -Dtest=EligibleVotingTest test
-mvn test
 ```
 
-The last two commands each execute TC03. To minimize demo data, use just `mvn test`
-to validate TC03 and the existing tests together. For checks without account creation:
+Run normal regression:
+
+```sh
+mvn clean test
+```
+
+Run TC13 separately using the documented command:
+
+```sh
+mvn -DexcludedGroups= -Dgroups=known-failure '-Dtest=com.bgr.qa.voting.CommentPersistenceTest#commentPersistsWithCorrectAuthorAfterRefresh' test
+```
+
+`known-failure` is a custom TestNG group. Surefire excludes it by default because TC13 has a documented empty-author discrepancy. The explicit command clears that exclusion and selects TC13. Selecting only `-Dtest` or `-Dgroups` does not clear the exclusion. TC13 retains its original assertions: it is not disabled, and an assertion failure still fails the build.
+
+For smoke and guest checks without account creation or vote submission:
 
 ```sh
 mvn -Dtest=WebsiteSmokeTest,GuestVotingTest test
 ```
 
-## TC03 account data and behavior
+Execution produces local Surefire reports under `target/surefire-reports/`. Tests do not automatically retry registration or submissions. Avoid unnecessary reruns: accounts, votes and comments persist on the demo, and browser cleanup does not remove them. Comment submission also casts a vote.
 
-Each TC03 execution creates exactly one unique account through the public registration
-form. `UiAccountHelper` generates a UUID-based username and a random password in memory;
-there are no hardcoded credentials, credential files or required environment variables.
-The helper is called only from TC03. A fresh account has no prior votes, and the test
-also requires an enabled Vote button and no existing success message before submission.
-There are no registration or vote retries. Re-running TC03 creates another account and
-vote, so avoid repeated runs or unattended loops against this public demo.
+## Test Evidence and Defect Records
 
-The live registration form inspected on 2026-10-11 required no email verification,
-CAPTCHA or manual step. If that changes, stop and reassess account preparation; do not
-bypass controls. Registration/login failures are setup failures, not proof of a voting
-defect. Accounts and votes remain on the demo; browser cleanup does not delete them.
+- [F04 specification, case mapping and execution evidence](agents/F04.md): approved manual cases, automation traceability and historical results.
+- [F04 Test Execution Summary](reports/F04_Test_Execution_Summary.md): consolidated results, defects and residual risks.
+- [Voting and comment tests](src/test/java/com/bgr/qa/voting/), [shared helpers](src/test/java/com/bgr/qa/helpers/), and [homepage smoke test](src/test/java/com/bgr/qa/WebsiteSmokeTest.java).
+- [Documented defect references](agents/F04.md#5-existing-defects-and-cautions): **VOTE-DF01 / KAN-1**, historical long-comment layout overflow; **VOTE-DF02 / KAN-2**, provisional missing-author metadata. TC13 may relate to KAN-2, but that relationship and product-defect classification are not confirmed. No public Jira URLs are supplied.
 
-The helper waits for `Registration is successful`, fills the navigation login fields,
-and waits for `Logout` to establish authentication. TC03 waits up to 30 seconds per
-condition, clicks `//button[normalize-space()='Vote!']` once, then checks the observed
-paragraph `Thank you for your vote!` and removal of the button. The optional comment
-is left blank. No exact vote-total assertion is used because others can vote concurrently.
+### Validation on 2026-10-11
 
-This covers the UI-observable scenario described in the supplied TC03 prompt. It does
-not verify database persistence, exactly one server-side record, or duplicate-vote
-prevention. No spreadsheet was supplied for an independent row-by-row comparison.
+Historical setup evidence records Maven **3.10.0**, **JDK 27** with compiler `release 17`, and Chrome **154.0.8037.98**. That earlier four-test baseline is superseded by the F04 results above. Execution on a Java 17 runtime was not separately verified, and these exact runtime versions are not independently established here for the final regression. The final record notes non-blocking SLF4J and Chrome CDP warnings.
 
-## Reading the test
+## Limitations
 
-- `@BeforeMethod` creates a fresh, non-static driver and prepares the account before the test.
-- `@Test` identifies the scenario TestNG executes; assertions fail it if expectations differ.
-- `@AfterMethod(alwaysRun = true)` closes Chrome even when setup or assertions fail.
-- `private static final By` stores a shared immutable locator, not a shared browser.
-- `WebDriverWait.until(...)` polls a condition instead of using fixed sleeps.
-- `UUID.randomUUID()` makes account collisions very unlikely; `String` holds text.
-- `try/finally` clears the driver reference even if `quit()` throws an exception.
-- The helper has package visibility and a private constructor because it only supplies
-  a reusable static operation; a larger Page Object refactor is unnecessary here.
-
-## Validation on 2026-10-11
-
-- Baseline: `mvn test-compile` succeeded; `mvn test` passed all 3 existing tests.
-- After implementation: `mvn test-compile test` succeeded; all 4 tests passed,
-  with 0 failures, 0 errors and 0 skips. TC03 ran once within that full suite.
-- Validation used Maven 3.10.0, JDK 27 with compiler `release 17`, and Chrome
-  154.0.8037.98. Execution on a Java 17 runtime was not separately verified.
-- Non-blocking warnings: Apache snapshots metadata timed out; SLF4J had no logging
-  provider; Selenium had no matching Chrome 154 CDP module. Standard WebDriver
-  interactions still passed; this test does not use CDP.
-- Live inspection created one account/vote; Selenium validation created one more,
-  both explicitly approved. No other account or vote retries were performed.
-- Existing guest-test edits and the untracked smoke-test file were preserved.
+- **UI-level evidence only:** absent guest/repeat-vote controls demonstrate UI prevention, not server-side rejection or exactly-once database writes. There is no API or backend coverage.
+- **Public-demo concurrency:** other users can affect displayed vote counts; test data and submissions persist in the shared environment.
+- **Known failure and manual scope:** TC13 is excluded from normal regression but explicitly runnable. TC10 and TC14 remain manual-first; their historical manual failures were not reverified in the final run.
+- **Security scope:** the approved special-symbol case checks text rendering and safe escaping, not comprehensive XSS protection or security assurance.
+- **Feedback interpretation:** TC16 checks immediate inline rendering of the submitted comment, not a dedicated comment-success notification.
+- **Evidence boundaries:** independent comparison with the original spreadsheet remains unverified. Root guidance retains an older baseline; use the current F04 mapping and execution report for coverage. Passing the selected regression does not establish that the application is defect-free or production-ready.
