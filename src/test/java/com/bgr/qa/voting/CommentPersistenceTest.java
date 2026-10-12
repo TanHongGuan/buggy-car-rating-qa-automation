@@ -75,6 +75,33 @@ public class CommentPersistenceTest {
         System.out.println("VOTE-TC13 author attribution=PASS");
     }
 
+    @Test(description = "VOTE-TC16: comment submission immediately displays the submitted content")
+    public void commentSubmissionDisplaysImmediateFeedback() {
+        driver.get(CAR_URL);
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.linkText("Logout")));
+        String comment = "QA comment feedback " + UUID.randomUUID();
+        By commentCell = By.xpath(COMMENT_TABLE + "/tbody/tr/td[3][text()='" + comment + "']");
+        WebElement input = wait.until(ExpectedConditions.visibilityOfElementLocated(COMMENT));
+        Assert.assertTrue(driver.findElements(commentCell).isEmpty(),
+            "The unique comment must not already be published");
+        input.sendKeys(comment);
+
+        // The actual submission control also votes. Click once; no retry or refresh.
+        wait.until(ExpectedConditions.elementToBeClickable(VOTE_BUTTON)).click();
+        WebElement published = wait.withMessage(
+            "Comment submission outcome was not communicated by displaying the submitted comment")
+            .until(ExpectedConditions.visibilityOfElementLocated(commentCell));
+        Assert.assertEquals(published.getText(), comment,
+            "The immediate response must display the exact submitted comment");
+        System.out.println("VOTE-TC16 comment-specific response: " + published.getText());
+        // Observe vote feedback separately; it is not the comment-success assertion.
+        for (WebElement feedback : driver.findElements(SUCCESS)) {
+            if (feedback.isDisplayed()) {
+                System.out.println("VOTE-TC16 accompanying vote notification: " + feedback.getText());
+            }
+        }
+    }
+
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
         if (driver != null) {
