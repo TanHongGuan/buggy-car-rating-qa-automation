@@ -34,13 +34,15 @@ Latest recorded verification: **2026-10-12**, UTC+08:00. These are recorded resu
 
 | Measure | Result |
 |---|---|
-| Documented manual cases | 16 |
+| Recorded manual cases | 16 |
 | Automated cases implemented | 14 — **87.5% implementation coverage** |
 | Passing automated F04 cases | 13 |
 | Automated known failure | TC13 — comment persists, Author cell empty |
 | Manual-first cases | TC10 (long-comment layout), TC14 (metadata) |
 | Normal regression | **BUILD SUCCESS** — 14 passed, 0 failures/errors/skips; includes one smoke test |
 | Separate TC13 execution | **BUILD FAILURE** — 1 test, 1 failure, 0 errors/skips |
+
+The [manual testing workbook](Manual%20Testing/BGR%20-%20Manual%20Testing.xlsx) records 16 F04 cases: **14 manual PASS and 2 manual FAIL (TC10 and TC14)**. It is separate from the automation test-design workbook. Automated results above come from documented Maven/TestNG runs; TC13 is manual PASS but automated FAIL.
 
 Implementation coverage is **14/16 cases**, including TC13. It is not the pass rate or a claim that every manual action is fully automated. The smoke test is additional to F04 and checks that the homepage title is nonempty.
 
@@ -129,4 +131,4 @@ Historical setup evidence records Maven **3.10.0**, **JDK 27** with compiler `re
 - **Known failure and manual scope:** TC13 is excluded from normal regression but explicitly runnable. TC10 and TC14 remain manual-first; their historical manual failures were not reverified in the final run.
 - **Security scope:** the approved special-symbol case checks text rendering and safe escaping, not comprehensive XSS protection or security assurance.
 - **Feedback interpretation:** TC16 checks immediate inline rendering of the submitted comment, not a dedicated comment-success notification.
-- **Evidence boundaries:** independent comparison with the original spreadsheet remains unverified. Root guidance retains an older baseline; use the current F04 mapping and execution report for coverage. Passing the selected regression does not establish that the application is defect-free or production-ready.
+- **Evidence boundaries:** manual workbook statuses and automated execution results are separate records, not new executions. Root guidance retains an older baseline; use the current F04 mapping and execution report for coverage. Passing the selected regression does not establish that the application is defect-free or production-ready.

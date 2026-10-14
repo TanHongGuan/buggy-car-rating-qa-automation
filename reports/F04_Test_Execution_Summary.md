@@ -6,6 +6,12 @@
 
 This report summarizes recorded results; no tests were rerun to prepare it. Sources are the [F04 specification and execution evidence](../agents/F04.md), [implemented voting tests](../src/test/java/com/bgr/qa/voting/), and [Maven configuration](../pom.xml).
 
+**Evidence sources:** [BGR - Manual Testing.xlsx](../Manual%20Testing/BGR%20-%20Manual%20Testing.xlsx),
+worksheet `F04 - Voting & Comments`, records **16 manual cases: 14 PASS and 2 FAIL
+(TC10 and TC14)**. The separate test-design workbook is not the manual execution record.
+Automated results below come from documented Maven/TestNG execution, independently of
+manual statuses. The [RTM](F04_Requirement_Traceability_Matrix.md) maps these cases directly.
+
 ## 1. Executive Summary
 
 F04 testing evaluates guest restrictions, voting eligibility, repeat-vote prevention, session transitions, displayed vote counts, and comment handling and feedback through the public Buggy Cars Rating UI.
@@ -32,7 +38,7 @@ The [README's historical validation](../README.md#validation-on-2026-10-11) reco
 
 | Measure | Count |
 |---|---:|
-| Approved manual cases | 16 |
+| Recorded manual cases | 16 |
 | Automated cases implemented | 14 |
 | Implementation coverage | **87.5% (14/16)** |
 | Automated cases passing in latest recorded execution | 13 |
@@ -64,9 +70,9 @@ TC13 took 36.79 seconds in Surefire; Maven reported 38.468 seconds total. Its `k
 
 ## 5. Test Case Results
 
-Automation results below refer to 2026-10-12. Manual results are historical entries in the specification, not reruns during the final regression. TC13's historical manual PASS and current automation FAIL are deliberately distinguished.
+Automation results below refer to 2026-10-12. Manual results are recorded in the manual testing workbook and were not rerun during final regression. TC13's manual PASS and automated FAIL remain separate observations.
 
-| Case | Scenario | Latest automation | Historical manual | Execution selection |
+| Case | Scenario | Latest automation | Recorded manual outcome | Execution selection |
 |---|---|---|---|---|
 | TC01 | Guest vote restriction | PASS | PASS | Normal |
 | TC02 | Guest comment restriction | PASS | PASS | Normal |
@@ -105,7 +111,7 @@ TC13 may relate to KAN-2, but the evidence does **not** establish that they are 
 - **Special symbols:** TC11 covers the approved symbol sequence with a unique marker. Safe escaping is accepted; no child markup/dialog was observed. The input contains no executable script payload, so this is not comprehensive XSS protection.
 - **Comment feedback:** TC16 interprets immediate inline comment rendering as outcome feedback. It does not verify a dedicated comment notification or use vote feedback as a substitute.
 - **Outstanding coverage:** TC13 remains a real failure outside normal regression. TC10 and TC14 have no automated coverage and their historical manual failures were not reverified. Comment submission also casts a vote; test data persists in the demo.
-- **Evidence boundaries:** The original spreadsheet was not independently available for comparison in the documented revision. The README and root guidance retain older baseline details; current coverage uses F04's reconciled mapping and Java code. No screenshot evidence, new manual execution, cross-browser validation or backend verification is claimed here.
+- **Evidence boundaries:** The manual workbook's recorded statuses have been inspected; this is not a new manual execution. No manual execution date is inferred from the automated baseline. Root guidance retains an older baseline; current coverage uses the F04 mapping and Java code. No new screenshot evidence, cross-browser validation or backend verification is claimed here.
 
 ## 8. Final QA Assessment
 
