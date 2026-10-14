@@ -4,6 +4,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.By;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
@@ -26,7 +27,12 @@ public class GuestVotingTest {
     @BeforeMethod
     public void setUp() {
 
-        driver = new ChromeDriver();
+        ChromeOptions options = new ChromeOptions();
+        // CI opts in; local runs remain headed unless explicitly requested.
+        if (Boolean.parseBoolean(System.getenv("HEADLESS"))) {
+            options.addArguments("--headless=new", "--window-size=1440,900");
+        }
+        driver = new ChromeDriver(options);
 
         driver.get(CAR_URL);
 

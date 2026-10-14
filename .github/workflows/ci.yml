@@ -1,0 +1,44 @@
+name: Safe QA smoke tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      HEADLESS: "true"
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Java 17 and Maven cache
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      # Chrome is supplied by the hosted image; Selenium Manager resolves its driver.
+      - name: Record tool versions
+        run: |
+          java -version
+          mvn -version
+          google-chrome --version
+
+      - name: Run only read-only smoke and guest tests
+        run: mvn -B -ntp '-Dtest=com.bgr.qa.WebsiteSmokeTest#verifyWebsiteLoads,com.bgr.qa.voting.GuestVotingTest#guestCannotSeeVoteButton+guestCannotSeeCommentSection' clean test
+
+      - name: Upload Surefire reports
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: surefire-reports
+          path: target/surefire-reports/
+          if-no-files-found: warn
