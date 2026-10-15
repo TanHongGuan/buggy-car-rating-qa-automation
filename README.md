@@ -8,6 +8,20 @@ An independent black-box QA portfolio project for the [Buggy Cars Rating public 
 
 Current scope is **F04 — Voting & Comments**: guest restrictions, eligible and repeat voting, login/logout transitions, vote counts, comment rendering, persistence and feedback. All verification uses the public UI; there is no access to application source code or backend data.
 
+## Discovered Failures
+
+Manual testing identified **three failing cases (TC10, TC13 and TC14)**. Automation also fails TC13: the comment persists after refresh, but its Author cell is empty.
+
+| Case | Finding | Manual result | Automated result | Defect reference |
+|---|---|---|---|---|
+| TC10 — Long-comment layout | Long comments overflow or disrupt the page layout. | FAIL | Not automated; manual-first | VOTE-DF01 / KAN-1 |
+| TC13 — Comment persistence and attribution | Persistence succeeds, but the required author attribution fails. Automation observes an empty Author cell. | FAIL | FAIL — `known-failure` | Possibly related to VOTE-DF02 / KAN-2; relationship unconfirmed |
+| TC14 — Comment metadata | Author metadata is missing. | FAIL | Not automated; manual-first | VOTE-DF02 / KAN-2 — provisional |
+
+TC13 remains independently executable with its original assertions. Normal regression excludes this known failure, so a green regression or smoke CI run does not mean all F04 cases pass.
+
+**Evidence update:** TC13's manual result is corrected to FAIL based on the project owner's clarification. The existing workbook, specification, RTM and execution summary retain the earlier manual PASS record and need corresponding reconciliation; their historical automated results are unchanged.
+
 ## Technology Stack
 
 | Component | Repository configuration |
@@ -30,11 +44,11 @@ Versions are defined in [pom.xml](pom.xml). Java 17 compatibility does not estab
 
 ## F04 — Voting & Comments
 
-Latest recorded verification: **2026-10-12**, UTC+08:00. These are recorded results, not a guarantee of the public demo's current behavior.
+Automated execution baseline: **2026-10-12**, UTC+08:00. These are recorded results, not a guarantee of the public demo's current behavior.
 
 | Measure | Result |
 |---|---|
-| Recorded manual cases | 16 |
+| Manual cases | 16 — **13 PASS, 3 FAIL** (TC10, TC13, TC14) |
 | Automated cases implemented | 14 — **87.5% implementation coverage** |
 | Passing automated F04 cases | 13 |
 | Automated known failure | TC13 — comment persists, Author cell empty |
@@ -42,7 +56,7 @@ Latest recorded verification: **2026-10-12**, UTC+08:00. These are recorded resu
 | Normal regression | **BUILD SUCCESS** — 14 passed, 0 failures/errors/skips; includes one smoke test |
 | Separate TC13 execution | **BUILD FAILURE** — 1 test, 1 failure, 0 errors/skips |
 
-The [manual testing workbook](Manual%20Testing/BGR%20-%20Manual%20Testing.xlsx) records 16 F04 cases: **14 manual PASS and 2 manual FAIL (TC10 and TC14)**. It is separate from the automation test-design workbook. Automated results above come from documented Maven/TestNG runs; TC13 is manual PASS but automated FAIL.
+The [manual testing workbook](Manual%20Testing/BGR%20-%20Manual%20Testing.xlsx) is separate from the automation test-design workbook. The manual totals above incorporate the TC13 correction described in the failure summary. Automated results come from documented Maven/TestNG runs: **13 F04 PASS and 1 FAIL (TC13)**.
 
 Implementation coverage is **14/16 cases**, including TC13. It is not the pass rate or a claim that every manual action is fully automated. The smoke test is additional to F04 and checks that the homepage title is nonempty.
 
